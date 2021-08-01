@@ -7,6 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.Min;
 
 @Entity
 @Table(name = "bidlist")
@@ -17,9 +18,13 @@ public class BidList {
 	private Integer BidListId;
 	private String account;
 	private String type;
+	@Min(value = 0)
 	private Double bidQuantity;
+	@Min(value = 0)
 	private Double askQuantity;
+	@Min(value = 0)
 	private Double bid;
+	@Min(value = 0)
 	private Double ask;
 	private String benchmark;
 	private Timestamp bidListDate;
