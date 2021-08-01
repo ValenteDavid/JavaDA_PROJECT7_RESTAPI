@@ -1,6 +1,8 @@
 package com.nnk.springboot.domain;
 
 import java.sql.Timestamp;
+import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -43,6 +45,12 @@ public class BidList {
 	private String side;
 	
 	public BidList() {
+	}
+	
+	public BidList(String account, String type, double bidQuantity) {
+		this.account=account;
+		this.type=type;
+		this.bidQuantity=bidQuantity;
 	}
 
 	public Integer getBidListId() {
