@@ -1,8 +1,6 @@
 package com.nnk.springboot.domain;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Optional;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "bidlist")
@@ -18,7 +17,9 @@ public class BidList {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer BidListId;
+	@NotBlank(message = "Account is mandatory")
 	private String account;
+	@NotBlank(message = "Type is mandatory")
 	private String type;
 	@Min(value = 0)
 	private Double bidQuantity;
