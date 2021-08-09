@@ -10,10 +10,12 @@ import javax.persistence.Table;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 
+import org.hibernate.validator.constraints.Range;
+
 @Entity
 @Table(name = "bidlist")
 public class BidList {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer BidListId;
@@ -21,13 +23,13 @@ public class BidList {
 	private String account;
 	@NotBlank(message = "Type is mandatory")
 	private String type;
-	@Min(value = 0)
+	@Range(min = 0, message = "Bid quantity must be a number greater than or equal to 0")
 	private Double bidQuantity;
-	@Min(value = 0)
+	@Range(min = 0, message = "Ask quantity must be a number greater than or equal to 0")
 	private Double askQuantity;
-	@Min(value = 0)
+	@Range(min = 0, message = "Bid must be a number greater than or equal to 0")
 	private Double bid;
-	@Min(value = 0)
+	@Range(min = 0, message = "Ask must be a number greater than or equal to 0")
 	private Double ask;
 	private String benchmark;
 	private Timestamp bidListDate;
@@ -44,14 +46,14 @@ public class BidList {
 	private String dealType;
 	private String sourceListId;
 	private String side;
-	
+
 	public BidList() {
 	}
-	
-	public BidList(String account, String type, double bidQuantity) {
-		this.account=account;
-		this.type=type;
-		this.bidQuantity=bidQuantity;
+
+	public BidList(String account, String type, Double bidQuantity) {
+		this.account = account;
+		this.type = type;
+		this.bidQuantity = bidQuantity;
 	}
 
 	public Integer getBidListId() {
@@ -229,5 +231,16 @@ public class BidList {
 	public void setSide(String side) {
 		this.side = side;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "BidList [BidListId=" + BidListId + ", account=" + account + ", type=" + type + ", bidQuantity="
+				+ bidQuantity + ", askQuantity=" + askQuantity + ", bid=" + bid + ", ask=" + ask + ", benchmark="
+				+ benchmark + ", bidListDate=" + bidListDate + ", commentary=" + commentary + ", security=" + security
+				+ ", status=" + status + ", trader=" + trader + ", book=" + book + ", creationName=" + creationName
+				+ ", creationDate=" + creationDate + ", revisionName=" + revisionName + ", revisionDate=" + revisionDate
+				+ ", dealName=" + dealName + ", dealType=" + dealType + ", sourceListId=" + sourceListId + ", side="
+				+ side + "]";
+	}
+
 }
