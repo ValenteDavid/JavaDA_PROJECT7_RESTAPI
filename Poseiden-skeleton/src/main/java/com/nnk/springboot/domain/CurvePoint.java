@@ -7,6 +7,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 
 @Entity
@@ -16,6 +18,7 @@ public class CurvePoint {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	Integer id;
+	@NotNull(message = "Curve id is mandatory")
 	Integer curveId;
 	Timestamp asOfDate;
 	Double term;
