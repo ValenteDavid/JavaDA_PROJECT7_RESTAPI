@@ -62,10 +62,6 @@ public class BidControllerTests {
 
 	@Test
 	public void validate_EmptyAccount_Test() throws Exception {
-		BidList bidList = new BidList("", "Type",null);
-		when(bidListRepository.save(bidList)).thenReturn(bidList);
-		when(bidListRepository.findAll()).thenReturn(anyList());
-
 		mockMvc.perform(post("/bidList/validate")
 				.param("account", "")
 				.param("type", "Type")
@@ -76,10 +72,6 @@ public class BidControllerTests {
 
 	@Test
 	public void validate_EmptyType_Test() throws Exception {
-		BidList bidList = new BidList("Account", "Type", 10.0);
-		when(bidListRepository.save(bidList)).thenReturn(bidList);
-		when(bidListRepository.findAll()).thenReturn(anyList());
-
 		mockMvc.perform(post("/bidList/validate")
 				.param("account", "Account")
 				.param("type", "")

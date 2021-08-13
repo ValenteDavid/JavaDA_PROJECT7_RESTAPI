@@ -73,8 +73,8 @@ public class BidListController {
 		log.info("POST /bidList/update/{1} called params : bidList {2}",id,bidList);
 		if (result.hasErrors()) {
 			log.debug(result.getAllErrors().toString());
-			bidList.setBidListId(id);
-			model.addAttribute("bidList", bidList);
+//			bidList.setBidListId(id);
+//			model.addAttribute("bidList", bidList);
 			log.info("POST /bidList/update/{1} response  : {2}",id,"bidList/update");
 			return "bidList/update";
 		}
