@@ -1,9 +1,10 @@
 package com.nnk.springboot.domain;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import java.sql.Timestamp;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "rating")
@@ -16,6 +17,23 @@ public class Rating {
 	private String sandPRating;
 	private String fitchRating;
 	private Integer orderNumber;
+	
+	public Rating() {
+	}
+	
+	public Rating(String moodysRating, String sandPRating, String fitchRating) {
+		super();
+		this.moodysRating = moodysRating;
+		this.sandPRating = sandPRating;
+		this.fitchRating = fitchRating;
+	}
+
+	public Rating(String moodysRating, String sandPRating, String fitchRating, Integer orderNumber) {
+		this.moodysRating = moodysRating;
+		this.sandPRating = sandPRating;
+		this.fitchRating = fitchRating;
+		this.orderNumber = orderNumber;
+	}
 	
 	public Integer getId() {
 		return id;
