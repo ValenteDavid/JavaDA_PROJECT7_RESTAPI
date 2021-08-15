@@ -14,7 +14,7 @@ public class RuleName {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
-	@NotEmpty(message = "Curve id is mandatory")
+	@NotEmpty(message = "Name is mandatory")
 	private String name;
 	private String description;
 	private String json;
@@ -25,7 +25,7 @@ public class RuleName {
 	public RuleName() {
 	}
 	
-	public RuleName(@NotEmpty(message = "Curve id is mandatory") String name, String description, String json) {
+	public RuleName(String name, String description, String json) {
 		super();
 		this.name = name;
 		this.description = description;
