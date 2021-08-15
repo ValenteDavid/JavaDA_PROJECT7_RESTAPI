@@ -9,6 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 
 import org.hibernate.validator.constraints.Range;
 
@@ -19,9 +20,9 @@ public class BidList {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer BidListId;
-	@NotBlank(message = "Account is mandatory")
+	@NotEmpty(message = "Account is mandatory")
 	private String account;
-	@NotBlank(message = "Type is mandatory")
+	@NotEmpty(message = "Type is mandatory")
 	private String type;
 	@Range(min = 0, message = "Bid quantity must be a number greater than or equal to 0")
 	private Double bidQuantity;
