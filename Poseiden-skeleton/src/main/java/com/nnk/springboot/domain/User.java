@@ -6,62 +6,72 @@ import javax.validation.constraints.NotBlank;
 @Entity
 @Table(name = "users")
 public class User {
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private Integer id;
-    @NotBlank(message = "Username is mandatory")
-    private String username;
-    @NotBlank(message = "Password is mandatory")
-    private String password;
-    @NotBlank(message = "FullName is mandatory")
-    private String fullname;
-    @NotBlank(message = "Role is mandatory")
-    private String role;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Integer id;
+	@NotBlank(message = "Username is mandatory")
+	private String username;
+	@NotBlank(message = "Password is mandatory")
+	private String password;
+	@NotBlank(message = "FullName is mandatory")
+	private String fullname;
+	@NotBlank(message = "Role is mandatory")
+	private String role;
+	
+	public User() {
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public User(String username, String password, String fullname, String role) {
+		this.username = username;
+		this.password = password;
+		this.fullname = fullname;
+		this.role = role;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public String getUsername() {
-        return username;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	public String getUsername() {
+		return username;
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public String getPassword() {
+		return password;
+	}
 
-    public String getFullname() {
-        return fullname;
-    }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
-    }
+	public String getFullname() {
+		return fullname;
+	}
 
-    public String getRole() {
-        return role;
-    }
+	public void setFullname(String fullname) {
+		this.fullname = fullname;
+	}
 
-    public void setRole(String role) {
-        this.role = role;
-    }
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
+	}
 
 	@Override
 	public String toString() {
 		return "User [id=" + id + ", username=" + username + ", password=" + password + ", fullname=" + fullname
 				+ ", role=" + role + "]";
 	}
-    
+
 }
