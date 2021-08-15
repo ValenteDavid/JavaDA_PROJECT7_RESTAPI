@@ -25,6 +25,13 @@ public class RuleName {
 	public RuleName() {
 	}
 	
+	public RuleName(@NotEmpty(message = "Curve id is mandatory") String name, String description, String json) {
+		super();
+		this.name = name;
+		this.description = description;
+		this.json = json;
+	}
+
 	public RuleName(String name, String description, String json,
 			String template, String sqlStr, String sqlPart) {
 		this.name = name;
