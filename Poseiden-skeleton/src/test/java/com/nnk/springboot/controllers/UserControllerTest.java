@@ -44,13 +44,13 @@ public class UserControllerTest {
 
 	@Test
 	public void validateTest() throws Exception {
-		User user = new User("User Name", "Password","Full Name", "Role");
+		User user = new User("User Name", "Password7&","Full Name", "Role");
 		when(userRepository.save(user)).thenReturn(user);
 		when(userRepository.findAll()).thenReturn(anyList());
 
 		mockMvc.perform(post("/user/validate")
 				.param("username", "User Name")
-				.param("password", "Password")
+				.param("password", "Password7&")
 				.param("fullname", "Full Name")
 				.param("role", "Role")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -62,7 +62,7 @@ public class UserControllerTest {
 	public void validate_EmptyUsername_Test() throws Exception {
 		mockMvc.perform(post("/user/validate")
 				.param("username", "")
-				.param("password", "Password")
+				.param("password", "Password7&")
 				.param("fullname", "Full Name")
 				.param("role", "Role")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -86,7 +86,7 @@ public class UserControllerTest {
 	public void validate_EmptyFullname_Test() throws Exception {
 		mockMvc.perform(post("/user/validate")
 				.param("username", "User Name")
-				.param("password", "Password")
+				.param("password", "Password7&")
 				.param("fullname", "")
 				.param("role", "Role")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -98,7 +98,7 @@ public class UserControllerTest {
 	public void validate_EmptyRole_Test() throws Exception {
 		mockMvc.perform(post("/user/validate")
 				.param("username", "User Name")
-				.param("password", "Password")
+				.param("password", "Password7&")
 				.param("fullname", "Full Name")
 				.param("role", "")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -111,7 +111,7 @@ public class UserControllerTest {
 	public void showUpdateFormTest() throws Exception {
 		Integer id = 1;
 		when(userRepository.findById(id)).thenReturn(
-				Optional.of(new User ("User Name", "Password","Full Name", "Role")));
+				Optional.of(new User ("User Name", "Password7&","Full Name", "Role")));
 
 		mockMvc.perform(get("/user/update/{0}", id))
 				.andExpect(model().attributeExists("user"))
@@ -132,7 +132,7 @@ public class UserControllerTest {
 	@Test
 	public void updateUser_Test() throws Exception {
 		Integer id = 1;
-		User user = new User("UserName", "Password","Full Name", "Role");
+		User user = new User("UserName", "Password7&","Full Name", "Role");
 		user.setId(id);
 		when(userRepository.save(user)).thenReturn(user);
 		when(userRepository.findAll()).thenReturn(anyList());
@@ -140,7 +140,7 @@ public class UserControllerTest {
 		mockMvc.perform(post("/user/update/{id}", id)
 				.param("id", "1")
 				.param("username", "UserName")
-				.param("password", "Password")
+				.param("password", "Password7&")
 				.param("fullname", "Full Name")
 				.param("role", "Role")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -155,7 +155,7 @@ public class UserControllerTest {
 		mockMvc.perform(post("/user/update/{id}", id)
 				.param("id", "1")
 				.param("username", "")
-				.param("password", "Password")
+				.param("password", "Password7&")
 				.param("fullname", "Full Name")
 				.param("role", "Role")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -167,7 +167,7 @@ public class UserControllerTest {
 	public void deleteTest() throws Exception {
 		Integer id = 1;
 		when(userRepository.findById(id)).thenReturn(
-				Optional.of(new User("UserName", "Password","Full Name", "Role")));
+				Optional.of(new User("UserName", "Password7&","Full Name", "Role")));
 		when(userRepository.findAll()).thenReturn(anyList());
 
 		mockMvc.perform(get("/user/delete/{0}", id))

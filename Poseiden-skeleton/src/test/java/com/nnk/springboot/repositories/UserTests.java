@@ -22,7 +22,7 @@ public class UserTests {
 
 	@Test
 	public void userTest() {
-		User user = new User("User Name", "Password","Full Name", "Role");
+		User user = new User("User Name", "Password7&","Full Name", "Role");
 
 		// Save
 		user = userRepository.save(user);
