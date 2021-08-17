@@ -2,6 +2,7 @@ package com.nnk.springboot.controllers;
 
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -15,12 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.nnk.springboot.domain.Rating;
 import com.nnk.springboot.repositories.RatingRepository;
 
 @WebMvcTest(controllers = RatingController.class)
+@WithMockUser(roles = "USER")
 public class RatingControllerTest {
 
 	@MockBean
@@ -48,7 +51,7 @@ public class RatingControllerTest {
 		when(ratingRepository.save(rating)).thenReturn(rating);
 		when(ratingRepository.findAll()).thenReturn(anyList());
 
-		mockMvc.perform(post("/rating/validate")
+		mockMvc.perform(post("/rating/validate").with(csrf())
 				.param("moodysRating", "Moodys Rating")
 				.param("sandPRating", "SandPRating")
 				.param("fitchRating", "Fitch Rating")
@@ -59,7 +62,7 @@ public class RatingControllerTest {
 	
 	@Test
 	public void validate_EmptyModdysRating_Test() throws Exception {
-		mockMvc.perform(post("/rating/validate")
+		mockMvc.perform(post("/rating/validate").with(csrf())
 				.param("moodysRating", "")
 				.param("sandPRating", "SandPRating")
 				.param("fitchRating", "Fitch Rating")
@@ -98,7 +101,7 @@ public class RatingControllerTest {
 		when(ratingRepository.save(rating)).thenReturn(rating);
 		when(ratingRepository.findAll()).thenReturn(anyList());
 
-		mockMvc.perform(post("/rating/update/{id}", id)
+		mockMvc.perform(post("/rating/update/{id}", id).with(csrf())
 				.param("id", "1")
 				.param("moodysRating", "Moodys Rating")
 				.param("sandPRating", "SandPRating")
@@ -112,7 +115,7 @@ public class RatingControllerTest {
 	public void updateRating_Test_HasError() throws Exception {
 		Integer id = 1;
 
-		mockMvc.perform(post("/rating/update/{id}", id)
+		mockMvc.perform(post("/rating/update/{id}", id).with(csrf())
 				.param("id", "1")
 				.param("moodysRating", "")
 				.param("sandPRating", "SandPRating")

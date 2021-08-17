@@ -2,6 +2,7 @@ package com.nnk.springboot.controllers;
 
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -15,12 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.nnk.springboot.domain.CurvePoint;
 import com.nnk.springboot.repositories.CurvePointRepository;
 
 @WebMvcTest(controllers = CurveController.class)
+@WithMockUser(roles = "USER")
 public class CurveControllerTest {
 
 	@MockBean
@@ -48,7 +51,7 @@ public class CurveControllerTest {
 		when(curvePointRepository.save(curvePoint)).thenReturn(curvePoint);
 		when(curvePointRepository.findAll()).thenReturn(anyList());
 
-		mockMvc.perform(post("/curvePoint/validate")
+		mockMvc.perform(post("/curvePoint/validate").with(csrf())
 				.param("curveId", "1")
 				.param("term", "1.0")
 				.param("value", "1.0")
@@ -59,7 +62,7 @@ public class CurveControllerTest {
 	
 	@Test
 	public void validate_EmptyCurveId_Test() throws Exception {
-		mockMvc.perform(post("/curvePoint/validate")
+		mockMvc.perform(post("/curvePoint/validate").with(csrf())
 				.param("curveId", "")
 				.param("term", "1.0")
 				.param("value", "1.0")
@@ -99,7 +102,7 @@ public class CurveControllerTest {
 		when(curvePointRepository.save(curvePoint)).thenReturn(curvePoint);
 		when(curvePointRepository.findAll()).thenReturn(anyList());
 
-		mockMvc.perform(post("/curvePoint/update/{id}", id)
+		mockMvc.perform(post("/curvePoint/update/{id}", id).with(csrf())
 				.param("id", "1")
 				.param("curveId", "1")
 				.param("term", "2.0")
@@ -113,7 +116,7 @@ public class CurveControllerTest {
 	public void updateCurvePoint_Test_HasError() throws Exception {
 		Integer id = 1;
 
-		mockMvc.perform(post("/curvePoint/update/{id}", id)
+		mockMvc.perform(post("/curvePoint/update/{id}", id).with(csrf())
 				.param("id", "1")
 				.param("curveId", "1")
 				.param("term", "1.0")

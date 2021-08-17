@@ -2,10 +2,10 @@ package com.nnk.springboot.controllers;
 
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import java.util.Optional;
@@ -16,14 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultHandler;
 
-import com.nnk.springboot.controllers.BidListController;
 import com.nnk.springboot.domain.BidList;
 import com.nnk.springboot.repositories.BidListRepository;
 
 @WebMvcTest(controllers = BidListController.class)
+@WithMockUser(roles = "USER")
 public class BidControllerTests {
 
 	@MockBean
@@ -51,7 +51,7 @@ public class BidControllerTests {
 		when(bidListRepository.save(bidList)).thenReturn(bidList);
 		when(bidListRepository.findAll()).thenReturn(anyList());
 
-		mockMvc.perform(post("/bidList/validate")
+		mockMvc.perform(post("/bidList/validate").with(csrf())
 				.param("account", "Account")
 				.param("type", "Type")
 				.param("bidQuantity", "10.0")
@@ -62,7 +62,7 @@ public class BidControllerTests {
 
 	@Test
 	public void validate_EmptyAccount_Test() throws Exception {
-		mockMvc.perform(post("/bidList/validate")
+		mockMvc.perform(post("/bidList/validate").with(csrf())
 				.param("account", "")
 				.param("type", "Type")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -72,7 +72,7 @@ public class BidControllerTests {
 
 	@Test
 	public void validate_EmptyType_Test() throws Exception {
-		mockMvc.perform(post("/bidList/validate")
+		mockMvc.perform(post("/bidList/validate").with(csrf())
 				.param("account", "Account")
 				.param("type", "")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -109,7 +109,7 @@ public class BidControllerTests {
 		when(bidListRepository.save(bidList)).thenReturn(bidList);
 		when(bidListRepository.findAll()).thenReturn(anyList());
 
-		mockMvc.perform(post("/bidList/update/{id}", id)
+		mockMvc.perform(post("/bidList/update/{id}", id).with(csrf())
 				.param("id", "1")
 				.param("account", "Account")
 				.param("type", "Type")
@@ -123,7 +123,7 @@ public class BidControllerTests {
 	public void updateBid_Test_HasError() throws Exception {
 		Integer id = 1;
 
-		mockMvc.perform(post("/bidList/update/{id}", id)
+		mockMvc.perform(post("/bidList/update/{id}", id).with(csrf())
 				.param("id", "1")
 				.param("account", "Account")
 				.param("type", "Type")

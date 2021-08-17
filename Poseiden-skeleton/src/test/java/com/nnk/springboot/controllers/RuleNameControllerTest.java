@@ -2,6 +2,7 @@ package com.nnk.springboot.controllers;
 
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -15,12 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.nnk.springboot.domain.RuleName;
 import com.nnk.springboot.repositories.RuleNameRepository;
 
 @WebMvcTest(controllers = RuleNameController.class)
+@WithMockUser(roles = "USER")
 public class RuleNameControllerTest {
 
 	@MockBean
@@ -48,7 +51,7 @@ public class RuleNameControllerTest {
 		when(ruleNameRepository.save(ruleName)).thenReturn(ruleName);
 		when(ruleNameRepository.findAll()).thenReturn(anyList());
 
-		mockMvc.perform(post("/ruleName/validate")
+		mockMvc.perform(post("/ruleName/validate").with(csrf())
 				.param("name", "Rule Name")
 				.param("description", "Description")
 				.param("json", "Json")
@@ -59,7 +62,7 @@ public class RuleNameControllerTest {
 	
 	@Test
 	public void validate_EmptyName_Test() throws Exception {
-		mockMvc.perform(post("/ruleName/validate")
+		mockMvc.perform(post("/ruleName/validate").with(csrf())
 				.param("name", "")
 				.param("description", "Description")
 				.param("json", "Json")
@@ -99,7 +102,7 @@ public class RuleNameControllerTest {
 		when(ruleNameRepository.save(ruleName)).thenReturn(ruleName);
 		when(ruleNameRepository.findAll()).thenReturn(anyList());
 
-		mockMvc.perform(post("/ruleName/update/{id}", id)
+		mockMvc.perform(post("/ruleName/update/{id}", id).with(csrf())
 				.param("id", "1")
 				.param("name", "RuleName")
 				.param("description", "Description")
@@ -113,7 +116,7 @@ public class RuleNameControllerTest {
 	public void updateRuleName_Test_HasError() throws Exception {
 		Integer id = 1;
 
-		mockMvc.perform(post("/ruleName/update/{id}", id)
+		mockMvc.perform(post("/ruleName/update/{id}", id).with(csrf())
 				.param("id", "1")
 				.param("curveId", "1")
 				.param("term", "1.0")
