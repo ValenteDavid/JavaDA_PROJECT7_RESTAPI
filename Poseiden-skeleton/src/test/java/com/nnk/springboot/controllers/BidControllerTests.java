@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Optional;
 
+import javax.sql.DataSource;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,9 @@ import com.nnk.springboot.repositories.BidListRepository;
 @WebMvcTest(controllers = BidListController.class)
 @WithMockUser(roles = "USER")
 public class BidControllerTests {
+	
+	@MockBean
+	private DataSource dataSource;
 
 	@MockBean
 	private BidListRepository bidListRepository;

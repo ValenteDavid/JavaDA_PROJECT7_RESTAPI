@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Optional;
 
+import javax.sql.DataSource;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,9 @@ import com.nnk.springboot.repositories.RatingRepository;
 @WebMvcTest(controllers = RatingController.class)
 @WithMockUser(roles = "USER")
 public class RatingControllerTest {
+	
+	@MockBean
+	private DataSource dataSource;
 
 	@MockBean
 	private RatingRepository ratingRepository;

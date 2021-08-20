@@ -16,8 +16,8 @@ public class User {
 	private Integer id;
 	@NotBlank(message = "Username is mandatory")
 	private String username;
-	@NotBlank(message = "Password is mandatory")
-	@Pattern(regexp = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$")
+	@NotBlank
+	@Pattern(regexp = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$", message = "Wrong format")
 	private String password;
 	@NotBlank(message = "FullName is mandatory")
 	private String fullname;

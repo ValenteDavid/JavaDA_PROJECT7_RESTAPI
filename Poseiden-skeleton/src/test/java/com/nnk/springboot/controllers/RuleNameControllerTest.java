@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Optional;
 
+import javax.sql.DataSource;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,10 @@ import com.nnk.springboot.repositories.RuleNameRepository;
 @WebMvcTest(controllers = RuleNameController.class)
 @WithMockUser(roles = "USER")
 public class RuleNameControllerTest {
-
+	
+	@MockBean
+	private DataSource dataSource;
+	
 	@MockBean
 	private RuleNameRepository ruleNameRepository;
 
