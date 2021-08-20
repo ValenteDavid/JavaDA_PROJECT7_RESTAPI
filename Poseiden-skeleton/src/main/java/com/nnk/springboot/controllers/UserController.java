@@ -1,8 +1,12 @@
 package com.nnk.springboot.controllers;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,62 +21,128 @@ import com.nnk.springboot.services.UserService;
 
 @Controller
 public class UserController {
-    @Autowired
-    private UserRepository userRepository;
-    
-    @Autowired 
-    private UserService userService ;
+	private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
-    @RequestMapping("/user/list")
-    public String home(Model model)
-    {
-        model.addAttribute("users", userRepository.findAll());
-        return "user/list";
-    }
+	@Autowired
+	private UserRepository userRepository;
 
-    @GetMapping("/user/add")
-    public String addUser(User bid) {
-        return "user/add";
-    }
+	@Autowired
+	private UserService userService;
 
-    @PostMapping("/user/validate")
-    public String validate(@Valid User user, BindingResult result, Model model) {
-        if (!result.hasErrors()) {
-            user.setPassword(userService.passwordEncoder(user.getPassword()));
-            userRepository.save(user);
-            model.addAttribute("users", userRepository.findAll());
-            return "redirect:/user/list";
-        }
-        return "user/add";
-    }
+	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+	@GetMapping("/user/home")
+	public String home(HttpServletRequest httpServletRequest, Model model) {
+		log.info("GET /user/home called");
+		if (httpServletRequest.isUserInRole("ADMIN")) {
+			model.addAttribute("users", userRepository.findAll());
+			log.info("GET /user/list response : {}", "user/list");
+			return "user/list";
+		} else {
+			Integer id = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName()).getId();
+			log.info("GET /user/list response : {}", "user/update/" + id);
+			return "redirect:/user/update/" + id;
+		}
+	}
 
-    @GetMapping("/user/update/{id}")
-    public String showUpdateForm(@PathVariable("id") Integer id, Model model) {
-        User user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
-        user.setPassword("");
-        model.addAttribute("user", user);
-        return "user/update";
-    }
+	@PreAuthorize("hasRole('ADMIN')")
+	@RequestMapping("/user/list")
+	public String home(Model model) {
+		log.info("GET /user/list called");
+		model.addAttribute("users", userRepository.findAll());
+		log.info("GET /user/list response : {}", "user/list");
+		return "user/list";
+	}
 
-    @PostMapping("/user/update/{id}")
-    public String updateUser(@PathVariable("id") Integer id, @Valid User user,
-                             BindingResult result, Model model) {
-        if (result.hasErrors()) {
-            return "user/update";
-        }
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/user/add")
+	public String addUser(User bid) {
+		log.info("GET /user/add called");
+		log.info("GET /user/add response : {}", "user/add");
+		return "user/add";
+	}
 
-        user.setPassword(userService.passwordEncoder(user.getPassword()));
-        user.setId(id);
-        userRepository.save(user);
-        model.addAttribute("users", userRepository.findAll());
-        return "redirect:/user/list";
-    }
+	@PreAuthorize("hasRole('ADMIN')")
+	@PostMapping("/user/validate")
+	public String validate(@Valid User user, BindingResult result, Model model) {
+		log.info("POST /user/validate called params : user {}", user);
+		if (!result.hasErrors()) {
+			user.setPassword(userService.passwordEncoder(user.getPassword()));
+			userRepository.save(user);
+			model.addAttribute("users", userRepository.findAll());
+			log.info("GET /user/validate return : {}", "redirect:/user/list");
+			return "redirect:/user/list";
+		}
+		log.debug(result.getAllErrors().toString());
+		log.info("POST /user/validate response : {}", "user/add");
+		return "user/add";
+	}
 
-    @GetMapping("/user/delete/{id}")
-    public String deleteUser(@PathVariable("id") Integer id, Model model) {
-        User user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
-        userRepository.delete(user);
-        model.addAttribute("users", userRepository.findAll());
-        return "redirect:/user/list";
-    }
+	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+	@GetMapping("/user/update/{id}")
+	public String showUpdateForm(@PathVariable("id") Integer id, Model model,
+			HttpServletRequest httpServletRequest) {
+		log.info("GET /user/update/{} called", id);
+
+		Integer userId = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName()).getId();
+		if (id.compareTo(userId) != 0 && !httpServletRequest.isUserInRole("ADMIN")) {
+			log.warn("id different : Have : {} Expect : {}", userId, id);
+			log.warn("GET /user/update/{} response : {} ", id, "redirect:/user/update/" + userId);
+			return "redirect:/user/update/" + userId;
+		}
+
+		User user = userRepository.findById(id)
+				.orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+		user.setPassword("");
+		model.addAttribute("user", user);
+		log.info("GET /user/update/{} response : {} ", id, "user/update");
+		return "user/update";
+	}
+
+	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+	@PostMapping("/user/update/{id}")
+	public String updateUser(@PathVariable("id") Integer id, @Valid User user, BindingResult result, Model model,
+			HttpServletRequest httpServletRequest) {
+		log.info("POST /user/update/{} called params : user {}", id, user);
+
+		if (result.hasErrors() && !result.hasFieldErrors("password")) {
+			log.debug(result.getAllErrors().toString());
+			log.info("POST /user/update/{} response  : {}", id, "user/update");
+			return "user/update";
+		}
+
+		Integer userId = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName())
+				.getId();
+		if (id.compareTo(userId) != 0 && !httpServletRequest.isUserInRole("ADMIN")) {
+			log.warn("id different : Have : {} Expect : {}", userId, id);
+			log.warn("GET /user/update/{} response : {} ", id, "redirect:/user/update/" + userId);
+			return "redirect:/user/update/" + userId;
+		}
+
+		if (result.hasFieldErrors("password")) {
+			if (user.getPassword() == "" || user.getPassword().isEmpty()) {
+				user.setPassword(userRepository.findById(id).get().getPassword());
+			}
+		} else {
+			user.setPassword(userService.passwordEncoder(user.getPassword()));
+		}
+
+		user.setId(id);
+		userRepository.save(user);
+		model.addAttribute("users", userRepository.findAll());
+		log.info("POST /user/update/{} response  : {}", id, "redirect:/user/list");
+		return "redirect:/user/list";
+	}
+
+	@PreAuthorize("hasRole('ADMIN')")
+	@GetMapping("/user/delete/{id}")
+	public String deleteUser(@PathVariable("id") Integer id, Model model) {
+		log.info("GET /user/delete/{} called", id);
+		User user = userRepository.findById(id)
+				.orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+		userRepository.delete(user);
+		model.addAttribute("users", userRepository.findAll());
+		log.info("GET /user/delete/{} response : {}", id, "redirect:/user/list");
+		return "redirect:/user/list";
+	}
+
 }
