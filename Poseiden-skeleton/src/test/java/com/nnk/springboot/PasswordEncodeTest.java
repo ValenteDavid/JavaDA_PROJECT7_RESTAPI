@@ -15,7 +15,7 @@ public class PasswordEncodeTest {
     @Test
     public void testPassword() {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String pw = encoder.encode("123456");
+        String pw = encoder.encode("admin123");
         System.out.println("[ "+ pw + " ]");
     }
 }

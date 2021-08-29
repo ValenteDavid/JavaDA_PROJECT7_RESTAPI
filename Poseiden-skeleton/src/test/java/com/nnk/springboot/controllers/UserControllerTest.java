@@ -26,7 +26,6 @@ import com.nnk.springboot.repositories.UserRepository;
 import com.nnk.springboot.services.UserService;
 
 @WebMvcTest(controllers = UserController.class)
-@WithMockUser(roles = "ADMIN")
 public class UserControllerTest {
 	
 	@MockBean
@@ -41,19 +40,22 @@ public class UserControllerTest {
 	private MockMvc mockMvc;
 
 	@Test
-	public void HomeTest() throws Exception {
+	@WithMockUser(authorities = "ADMIN")
+	public void homeTest() throws Exception {
 		mockMvc.perform(get("/user/list"))
 				.andExpect(model().attributeExists("users"))
 				.andExpect(view().name("user/list"));
 	}
 
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void addUserTest() throws Exception {
 		mockMvc.perform(get("/user/add"))
 				.andExpect(view().name("user/add"));
 	}
 
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void validateTest() throws Exception {
 		User user = new User("User Name", "Password7&","Full Name", "Role");
 		when(userRepository.save(user)).thenReturn(user);
@@ -71,6 +73,7 @@ public class UserControllerTest {
 	}
 	
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void validate_EmptyUsername_Test() throws Exception {
 		mockMvc.perform(post("/user/validate").with(csrf())
 				.param("username", "")
@@ -83,6 +86,7 @@ public class UserControllerTest {
 	}
 	
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void validate_EmptyPassword_Test() throws Exception {
 		mockMvc.perform(post("/user/validate").with(csrf())
 				.param("username", "User Name")
@@ -95,6 +99,7 @@ public class UserControllerTest {
 	}
 	
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void validate_EmptyFullname_Test() throws Exception {
 		mockMvc.perform(post("/user/validate").with(csrf())
 				.param("username", "User Name")
@@ -107,6 +112,7 @@ public class UserControllerTest {
 	}
 	
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void validate_EmptyRole_Test() throws Exception {
 		mockMvc.perform(post("/user/validate").with(csrf())
 				.param("username", "User Name")
@@ -120,19 +126,27 @@ public class UserControllerTest {
 
 
 	@Test
+	@WithMockUser(authorities = "ADMIN",username = "User Name")
 	public void showUpdateFormTest() throws Exception {
 		Integer id = 1;
+		User user = new User ("User Name", "Password7&","Full Name", "ADMIN");
+		user.setId(1);
+		
+		when(userRepository.findByUsername("User Name")).thenReturn(Optional.of(user));
 		when(userRepository.findById(id)).thenReturn(
-				Optional.of(new User ("User Name", "Password7&","Full Name", "Role")));
+				Optional.of(user));
 
 		mockMvc.perform(get("/user/update/{0}", id))
-				.andExpect(model().attributeExists("user"))
+				.andExpect(model().attributeExists("userDTOForm"))
 				.andExpect(view().name("user/update"));
 	}
 
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void showUpdateForm_NotFoundId_Test() throws Exception {
 		Integer id = 1;
+		
+		when(userRepository.findByUsername("User Name")).thenReturn(null);
 		when(userRepository.findById(id)).thenReturn(Optional.empty());
 
 		Assertions
@@ -140,32 +154,35 @@ public class UserControllerTest {
 				.hasCause(new IllegalArgumentException("Invalid user Id:" + id));
 	}
 
-
 	@Test
+	@WithMockUser(authorities = "ADMIN",username = "AdminName")
 	public void updateUser_Test() throws Exception {
 		Integer id = 1;
-		User user = new User("UserName", "Password7&","Full Name", "Role");
+		User user = new User("AdminName", "Password7&","Full Name", "ADMIN");
 		user.setId(id);
+		when(userRepository.findByUsername("AdminName")).thenReturn(Optional.of(user));
 		when(userRepository.save(user)).thenReturn(user);
 		when(userRepository.findAll()).thenReturn(anyList());
 		when(userService.passwordEncoder(user.getPassword())).thenReturn(user.getPassword());
+		
+		
 
-		mockMvc.perform(post("/user/update/{id}", id).with(csrf())
-				.param("id", "1")
-				.param("username", "UserName")
+		mockMvc.perform(post("/user/update/{0}", id).with(csrf())
+				.param("username", "AdminName")
 				.param("password", "Password7&")
-				.param("fullname", "Full Name")
-				.param("role", "Role")
+				.param("fullname", "FullName")
+				.param("role", "ADMIN")
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON))
-				.andExpect(view().name("redirect:/user/list"));
+				.andExpect(view().name("redirect:/user/home"));
 	}
 
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void updateUser_Test_HasError() throws Exception {
 		Integer id = 1;
 
-		mockMvc.perform(post("/user/update/{id}", id).with(csrf())
+		mockMvc.perform(post("/user/update/{0}", id).with(csrf())
 				.param("id", "1")
 				.param("username", "")
 				.param("password", "Password7&")
@@ -177,6 +194,7 @@ public class UserControllerTest {
 	}
 
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void deleteTest() throws Exception {
 		Integer id = 1;
 		when(userRepository.findById(id)).thenReturn(
@@ -189,6 +207,7 @@ public class UserControllerTest {
 	}
 
 	@Test
+	@WithMockUser(authorities = "ADMIN")
 	public void deleteTest_NotFoundId_() throws Exception {
 		Integer id = 1;
 		when(userRepository.findById(id)).thenReturn(Optional.empty());
@@ -197,7 +216,6 @@ public class UserControllerTest {
 		Assertions
 				.assertThatThrownBy(() -> mockMvc.perform(get("/user/delete/{0}", id)))
 				.hasCause(new IllegalArgumentException("Invalid user Id:" + id));
-
 	}
 
 

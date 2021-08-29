@@ -1,5 +1,8 @@
 package com.nnk.springboot.controllers;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.nnk.springboot.controllers.dto.UserDTOForm;
+import com.nnk.springboot.controllers.dto.UserDTOList;
 import com.nnk.springboot.domain.User;
 import com.nnk.springboot.repositories.UserRepository;
 import com.nnk.springboot.services.UserService;
@@ -34,11 +39,11 @@ public class UserController {
 	public String home(HttpServletRequest httpServletRequest, Model model) {
 		log.info("GET /user/home called");
 		if (httpServletRequest.isUserInRole("ADMIN")) {
-			model.addAttribute("users", userRepository.findAll());
+			model.addAttribute("users", getUserList());
 			log.info("GET /user/list response : {}", "user/list");
-			return "user/list";
+			return "redirect:/user/list";
 		} else {
-			Integer id = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName()).getId();
+			Integer id = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName()).get().getId();
 			log.info("GET /user/list response : {}", "user/update/" + id);
 			return "redirect:/user/update/" + id;
 		}
@@ -48,14 +53,14 @@ public class UserController {
 	@RequestMapping("/user/list")
 	public String home(Model model) {
 		log.info("GET /user/list called");
-		model.addAttribute("users", userRepository.findAll());
+		model.addAttribute("users", getUserList());
 		log.info("GET /user/list response : {}", "user/list");
 		return "user/list";
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/user/add")
-	public String addUser(User bid) {
+	public String addUser(UserDTOForm userDTOForm) {
 		log.info("GET /user/add called");
 		log.info("GET /user/add response : {}", "user/add");
 		return "user/add";
@@ -63,12 +68,14 @@ public class UserController {
 
 	@PreAuthorize("hasRole('ADMIN')")
 	@PostMapping("/user/validate")
-	public String validate(@Valid User user, BindingResult result, Model model) {
-		log.info("POST /user/validate called params : user {}", user);
-		if (!result.hasErrors()) {
+	public String validate(@Valid UserDTOForm userDTOForm, BindingResult result, Model model) {
+		log.info("POST /user/validate called params : user {}", userDTOForm);
+		if (!result.hasErrors() && !userRepository.findByUsername(userDTOForm.getUsername()).isPresent()
+				&& userDTOForm.passwordExist()) {
+			User user = UserDTOForm.DTOtoDomain(userDTOForm);
 			user.setPassword(userService.passwordEncoder(user.getPassword()));
 			userRepository.save(user);
-			model.addAttribute("users", userRepository.findAll());
+			model.addAttribute("users", getUserList());
 			log.info("GET /user/validate return : {}", "redirect:/user/list");
 			return "redirect:/user/list";
 		}
@@ -82,55 +89,78 @@ public class UserController {
 	public String showUpdateForm(@PathVariable("id") Integer id, Model model,
 			HttpServletRequest httpServletRequest) {
 		log.info("GET /user/update/{} called", id);
+		
+		User user = userRepository.findById(id)
+				.orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+		user.setPassword("");
 
-		Integer userId = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName()).getId();
+		Integer userId = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName()).get().getId();
 		if (id.compareTo(userId) != 0 && !httpServletRequest.isUserInRole("ADMIN")) {
 			log.warn("id different : Have : {} Expect : {}", userId, id);
 			log.warn("GET /user/update/{} response : {} ", id, "redirect:/user/update/" + userId);
 			return "redirect:/user/update/" + userId;
 		}
 
-		User user = userRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
-		user.setPassword("");
-		model.addAttribute("user", user);
+		model.addAttribute("userDTOForm", UserDTOForm.DomaintoDTO(user));
+		
+		if(httpServletRequest.isUserInRole("ADMIN")) {
+			model.addAttribute("allowRole", true);
+		}else {
+			model.addAttribute("allowRole", false);
+		}
 		log.info("GET /user/update/{} response : {} ", id, "user/update");
 		return "user/update";
 	}
 
 	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 	@PostMapping("/user/update/{id}")
-	public String updateUser(@PathVariable("id") Integer id, @Valid User user, BindingResult result, Model model,
+	public String updateUser(@PathVariable("id") Integer id, @Valid UserDTOForm userDTOForm, BindingResult result, Model model,
 			HttpServletRequest httpServletRequest) {
-		log.info("POST /user/update/{} called params : user {}", id, user);
+		log.info("POST /user/update/{} called params : user {}", id, userDTOForm);
 
-		if (result.hasErrors() && !result.hasFieldErrors("password")) {
+		if (result.hasErrors()) {
 			log.debug(result.getAllErrors().toString());
 			log.info("POST /user/update/{} response  : {}", id, "user/update");
 			return "user/update";
 		}
-
-		Integer userId = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName())
+		
+		Integer userId = userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName()).get()
 				.getId();
+		
 		if (id.compareTo(userId) != 0 && !httpServletRequest.isUserInRole("ADMIN")) {
 			log.warn("id different : Have : {} Expect : {}", userId, id);
 			log.warn("GET /user/update/{} response : {} ", id, "redirect:/user/update/" + userId);
 			return "redirect:/user/update/" + userId;
 		}
-
-		if (result.hasFieldErrors("password")) {
-			if (user.getPassword() == "" || user.getPassword().isEmpty()) {
-				user.setPassword(userRepository.findById(id).get().getPassword());
+		
+		User user = UserDTOForm.DTOtoDomain(
+				userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName()).get(),
+				userDTOForm);
+		
+		if (!httpServletRequest.isUserInRole("ADMIN")) {
+			user.setRole(userRepository.findByUsername(httpServletRequest.getUserPrincipal().getName()).get().getRole());
+		}else {
+			switch (userDTOForm.getRole()) {
+			case "USER":
+				user.setRole(userDTOForm.getRole());
+				break;
+			case "ADMIN":
+				user.setRole(userDTOForm.getRole());
+				break;
+			default:
+				log.warn("Error assign role");
+				return "user/update";
 			}
-		} else {
+		}
+		
+		if(userDTOForm.passwordExist()) {
 			user.setPassword(userService.passwordEncoder(user.getPassword()));
 		}
-
-		user.setId(id);
+		
 		userRepository.save(user);
-		model.addAttribute("users", userRepository.findAll());
-		log.info("POST /user/update/{} response  : {}", id, "redirect:/user/list");
-		return "redirect:/user/list";
+		model.addAttribute("users", getUserList());
+		log.info("POST /user/update/{} response  : {}", id, "redirect:/user/home");
+		return "redirect:/user/home";
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
@@ -140,9 +170,15 @@ public class UserController {
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
 		userRepository.delete(user);
-		model.addAttribute("users", userRepository.findAll());
+		model.addAttribute("users", getUserList());
 		log.info("GET /user/delete/{} response : {}", id, "redirect:/user/list");
 		return "redirect:/user/list";
+	}
+
+	private Collection<UserDTOList> getUserList() {
+		return userRepository.findAll().stream()
+				.map(users -> UserDTOList.DomainToDTO(users))
+				.collect(Collectors.toList());
 	}
 
 }

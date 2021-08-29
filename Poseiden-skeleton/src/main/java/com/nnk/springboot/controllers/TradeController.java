@@ -1,6 +1,8 @@
 package com.nnk.springboot.controllers;
 
 import java.sql.Timestamp;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.nnk.springboot.controllers.dto.TradeDTOForm;
+import com.nnk.springboot.controllers.dto.TradeDTOList;
 import com.nnk.springboot.domain.Trade;
 import com.nnk.springboot.domain.UserRole;
 import com.nnk.springboot.domain.UserRole.typeUser;
@@ -33,7 +37,7 @@ public class TradeController {
     @RequestMapping("/trade/list")
     public String home(Model model,HttpServletRequest httpServletRequest){
     	log.info("GET /trade/list");
-		model.addAttribute("trades", tradeRepository.findAll());
+		model.addAttribute("trades", getTradeList());
 		model = allowRole(model, httpServletRequest);
 		log.info("GET /trade/list response : {}","trade/list");
         return "trade/list";
@@ -41,7 +45,7 @@ public class TradeController {
 
 	@PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/trade/add")
-    public String addTradeForm(Trade trade) {
+    public String addTradeForm(TradeDTOForm tradeDTOForm) {
     	log.info("GET /trade/add called");
 		log.info("GET /trade/add response : {}","trade/add");
         return "trade/add";
@@ -49,14 +53,14 @@ public class TradeController {
 
 	@PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/trade/validate")
-    public String validate(@Valid Trade trade, BindingResult result, Model model) {
-    	log.info("POST /trade/validate called params : trade {}",trade);
+    public String validate(@Valid TradeDTOForm tradeDTOForm, BindingResult result, Model model,HttpServletRequest httpServletRequest) {
+    	log.info("POST /trade/validate called params : trade {}",tradeDTOForm);
 		if (!result.hasErrors()) {
-			//TODO Set UserName
-//			trade.setCreationName(user.getUsername());
+			Trade trade = TradeDTOForm.DTOToDomain(new Trade(), tradeDTOForm);
+			trade.setCreationName(httpServletRequest.getRemoteUser());
 			trade.setCreationDate(new Timestamp(System.currentTimeMillis()));
 			tradeRepository.save(trade);
-			model.addAttribute("trades", tradeRepository.findAll());
+			model.addAttribute("trades", getTradeList());
 			log.info("GET /trade/validate return : {}","redirect:/trade/list");
 			return "redirect:/trade/list";
 		}
@@ -71,29 +75,27 @@ public class TradeController {
     	log.info("GET /trade/update/{} called",id);
 		Trade trade = tradeRepository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid trade Id:" + id));
-		model.addAttribute("trade", trade);
-		log.info("GET /trade/update/{1} response : {2} ",id,"trade/update");
+		model.addAttribute("tradeDTOForm", TradeDTOForm.DomainToDTO(trade));
+		log.info("GET /trade/update/{} response : {} ",id,"trade/update");
         return "trade/update";
     }
 
 	@PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/trade/update/{id}")
-    public String updateTrade(@PathVariable("id") Integer id, @Valid Trade trade,
-                             BindingResult result, Model model) {
-    	log.info("POST /trade/update/{1} called params : trade {2}",id,trade);
+    public String updateTrade(@PathVariable("id") Integer id, @Valid TradeDTOForm tradeDTOForm,
+                             BindingResult result, Model model, HttpServletRequest httpServletRequest) {
+    	log.info("POST /trade/update/{} called params : trade {}",id,tradeDTOForm);
 		if (result.hasErrors()) {
 			log.debug(result.getAllErrors().toString());
-			log.info("POST /trade/update/{1} response  : {2}",id,"trade/update");
+			log.info("POST /trade/update/{} response  : {}",id,"trade/update");
 			return "trade/update";
 		}
-		
-		trade.setTradeId(id);
-		//TODO Set UserName
-//		trade.setRevisionName(user.getUsername());
+		Trade trade = TradeDTOForm.DTOToDomain(tradeRepository.getById(id), tradeDTOForm);
+		trade.setRevisionName(httpServletRequest.getRemoteUser());
 		trade.setRevisionDate(new Timestamp(System.currentTimeMillis()));
 		tradeRepository.save(trade);
-		model.addAttribute("trades", tradeRepository.findAll());
-		log.info("POST /trade/update/{1} response  : {2}",id,"redirect:/trade/list");
+		model.addAttribute("trades", getTradeList());
+		log.info("POST /trade/update/{} response  : {}",id,"redirect:/trade/list");
         return "redirect:/trade/list";
     }
 
@@ -104,11 +106,17 @@ public class TradeController {
 		Trade trade = tradeRepository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid trade Id:" + id));
 		tradeRepository.delete(trade);
-		model.addAttribute("trades", tradeRepository.findAll());
-		log.info("GET /trade/delete/{1} response : {2}",id,"redirect:/trade/list");
+		model.addAttribute("trades", getTradeList());
+		log.info("GET /trade/delete/{} response : {}",id,"redirect:/trade/list");
         return "redirect:/trade/list";
     }
     
+	private Collection<TradeDTOList> getTradeList() {
+		return tradeRepository.findAll().stream()
+				.map(trades -> TradeDTOList.DomainToDTO(trades))
+				.collect(Collectors.toList());
+	}
+	
 	private Model allowRole(Model model, HttpServletRequest httpServletRequest) {
 		UserRole.typeUser userRoleType;
 		

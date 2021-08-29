@@ -1,5 +1,8 @@
 package com.nnk.springboot.controllers;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.nnk.springboot.controllers.dto.RuleNameDTOForm;
+import com.nnk.springboot.controllers.dto.RuleNameDTOList;
 import com.nnk.springboot.domain.RuleName;
 import com.nnk.springboot.domain.UserRole;
 import com.nnk.springboot.domain.UserRole.typeUser;
@@ -31,7 +36,7 @@ public class RuleNameController {
     @RequestMapping("/ruleName/list")
     public String home(Model model,HttpServletRequest httpServletRequest) {
 		log.info("GET /ruleName/list");
-		model.addAttribute("ruleNames", ruleNameRepository.findAll());
+		model.addAttribute("ruleNames", getRuleNameList());
 		model = allowRole(model, httpServletRequest);
 		log.info("GET /ruleName/list response : {}","ruleName/list");
         return "ruleName/list";
@@ -39,7 +44,7 @@ public class RuleNameController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/ruleName/add")
-    public String addRuleNameForm(RuleName bid) {
+    public String addRuleNameForm(RuleNameDTOForm ruleNameDTOForm) {
     	log.info("GET /ruleName/add called");
 		log.info("GET /ruleName/add response : {}","ruleName/add");
         return "ruleName/add";
@@ -47,11 +52,13 @@ public class RuleNameController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/ruleName/validate")
-    public String validate(@Valid RuleName ruleName, BindingResult result, Model model) {
-    	log.info("POST /ruleName/validate called params : ruleName {}",ruleName);
+    public String validate(@Valid RuleNameDTOForm ruleNameDTOForm, BindingResult result, Model model) {
+    	log.info("POST /ruleName/validate called params : ruleName {}",ruleNameDTOForm);
 		if (!result.hasErrors()) {
+			RuleName ruleName = RuleNameDTOForm.DTOToDomain(new RuleName(),ruleNameDTOForm);
 			ruleNameRepository.save(ruleName);
-			model.addAttribute("ruleNames", ruleNameRepository.findAll());
+			model.addAttribute("ruleNames", getRuleNameList());
+			
 			log.info("GET /ruleName/validate return : {}","redirect:/ruleName/list");
 			return "redirect:/ruleName/list";
 		}
@@ -66,26 +73,25 @@ public class RuleNameController {
     	log.info("GET /ruleName/update/{} called",id);
 		RuleName ruleName = ruleNameRepository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid ruleName Id:" + id));
-		model.addAttribute("ruleName", ruleName);
-		log.info("GET /ruleName/update/{1} response : {2} ",id,"ruleName/update");
+		model.addAttribute("ruleNameDTOForm", RuleNameDTOForm.DomainToDTO(ruleName));
+		log.info("GET /ruleName/update/{} response : {} ",id,"ruleName/update");
         return "ruleName/update";
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/ruleName/update/{id}")
-    public String updateRuleName(@PathVariable("id") Integer id, @Valid RuleName ruleName,
+    public String updateRuleName(@PathVariable("id") Integer id, @Valid RuleNameDTOForm ruleNameDTOForm,
                              BindingResult result, Model model) {
-    		log.info("POST /ruleName/update/{1} called params : ruleName {2}",id,ruleName);
+    		log.info("POST /ruleName/update/{} called params : ruleName {}",id,ruleNameDTOForm);
     		if (result.hasErrors()) {
     			log.debug(result.getAllErrors().toString());
-    			log.info("POST /ruleName/update/{1} response  : {2}",id,"ruleName/update");
+    			log.info("POST /ruleName/update/{} response  : {}",id,"ruleName/update");
     			return "ruleName/update";
     		}
-    		
-    		ruleName.setId(id);
+    		RuleName ruleName = RuleNameDTOForm.DTOToDomain(ruleNameRepository.getById(id),ruleNameDTOForm);
     		ruleNameRepository.save(ruleName);
-    		model.addAttribute("ruleNames", ruleNameRepository.findAll());
-    		log.info("POST /ruleName/update/{1} response  : {2}",id,"redirect:/ruleName/list");
+    		model.addAttribute("ruleNames", getRuleNameList());
+    		log.info("POST /ruleName/update/{} response  : {}",id,"redirect:/ruleName/list");
         return "redirect:/ruleName/list";
     }
 
@@ -96,10 +102,16 @@ public class RuleNameController {
 		RuleName ruleName = ruleNameRepository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid ruleName Id:" + id));
 		ruleNameRepository.delete(ruleName);
-		model.addAttribute("ruleNames", ruleNameRepository.findAll());
-		log.info("GET /ruleName/delete/{1} response : {2}",id,"redirect:/ruleName/list");
+		model.addAttribute("ruleNames", getRuleNameList());
+		log.info("GET /ruleName/delete/{} response : {}",id,"redirect:/ruleName/list");
         return "redirect:/ruleName/list";
     }
+    
+    private Collection<RuleNameDTOList> getRuleNameList() {
+		return ruleNameRepository.findAll().stream()
+				.map(ruleNames -> RuleNameDTOList.DomainToDTO(ruleNames))
+				.collect(Collectors.toList());
+	}
     
 	private Model allowRole(Model model, HttpServletRequest httpServletRequest) {
 		UserRole.typeUser userRoleType;

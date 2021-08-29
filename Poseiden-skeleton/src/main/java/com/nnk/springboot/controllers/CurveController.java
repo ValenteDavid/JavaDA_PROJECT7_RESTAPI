@@ -1,6 +1,8 @@
 package com.nnk.springboot.controllers;
 
 import java.sql.Timestamp;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.nnk.springboot.controllers.dto.CurvePointDTOForm;
+import com.nnk.springboot.controllers.dto.CurvePointDTOList;
 import com.nnk.springboot.domain.CurvePoint;
 import com.nnk.springboot.domain.UserRole;
 import com.nnk.springboot.domain.UserRole.typeUser;
@@ -33,7 +37,7 @@ public class CurveController {
     @RequestMapping("/curvePoint/list")
     public String home(Model model, HttpServletRequest httpServletRequest) {
 		log.info("GET /curvePoint/list");
-		model.addAttribute("curvePoints", curvePointRepository.findAll());
+		model.addAttribute("curvePoints",getCurvePointList());
 		model = allowRole(model, httpServletRequest);
 		log.info("GET /curvePoint/list response : {}","curvePoint/list");
         return "curvePoint/list";
@@ -41,7 +45,7 @@ public class CurveController {
 
 	@PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/curvePoint/add")
-    public String addCurvePointForm(CurvePoint bid) {
+    public String addCurvePointForm(CurvePointDTOForm curvePointDTOForm) {
     	log.info("GET /curvePoint/add called");
 		log.info("GET /curvePoint/add response : {}","curvePoint/add");
         return "curvePoint/add";
@@ -49,12 +53,14 @@ public class CurveController {
 
 	@PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/curvePoint/validate")
-    public String validate(@Valid CurvePoint curvePoint, BindingResult result, Model model) {
-    	log.info("POST /curvePoint/validate called params : curvePoint {}",curvePoint);
+    public String validate(@Valid CurvePointDTOForm curvePointDTOForm, BindingResult result, Model model) {
+    	log.info("POST /curvePoint/validate called params : curvePoint {}",curvePointDTOForm);
 		if (!result.hasErrors()) {
+			CurvePoint curvePoint = CurvePointDTOForm.DTOToDomain(new CurvePoint(), curvePointDTOForm);
 			curvePoint.setCreationDate(new Timestamp(System.currentTimeMillis()));
 			curvePointRepository.save(curvePoint);
-			model.addAttribute("curvePoints", curvePointRepository.findAll());
+			model.addAttribute("curvePoints",getCurvePointList());
+			
 			log.info("GET /curvePoint/validate return : {}","redirect:/curvePoint/list");
 			return "redirect:/curvePoint/list";
 		}
@@ -69,26 +75,25 @@ public class CurveController {
     	log.info("GET /curvePoint/update/{} called",id);
 		CurvePoint curvePoint = curvePointRepository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid curvePoint Id:" + id));
-		model.addAttribute("curvePoint", curvePoint);
-		log.info("GET /curvePoint/update/{1} response : {2} ",id,"curvePoint/update");
+		model.addAttribute("curvePointDTOForm", CurvePointDTOForm.DomaintoDTO(curvePoint));
+		log.info("GET /curvePoint/update/{} response : {} ",id,"curvePoint/update");
         return "curvePoint/update";
     }
 
 	@PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/curvePoint/update/{id}")
-    public String updateCurvePoint(@PathVariable("id") Integer id, @Valid CurvePoint curvePoint,
+    public String updateCurvePoint(@PathVariable("id") Integer id, @Valid CurvePointDTOForm curvePointDTOForm,
                              BindingResult result, Model model) {
-    		log.info("POST /curvePoint/update/{1} called params : curvePoint {2}",id,curvePoint);
+    		log.info("POST /curvePoint/update/{} called params : curvePoint {}",id,curvePointDTOForm);
     		if (result.hasErrors()) {
     			log.debug(result.getAllErrors().toString());
-    			log.info("POST /curvePoint/update/{1} response  : {2}",id,"curvePoint/update");
+    			log.info("POST /curvePoint/update/{} response  : {}",id,"curvePoint/update");
     			return "curvePoint/update";
     		}
-    		
-    		curvePoint.setId(id);
+    		CurvePoint curvePoint = CurvePointDTOForm.DTOToDomain(curvePointRepository.getById(id), curvePointDTOForm);
     		curvePointRepository.save(curvePoint);
-    		model.addAttribute("curvePoints", curvePointRepository.findAll());
-    		log.info("POST /curvePoint/update/{1} response  : {2}",id,"redirect:/curvePoint/list");
+    		model.addAttribute("curvePoints", getCurvePointList());
+    		log.info("POST /curvePoint/update/{} response  : {}",id,"redirect:/curvePoint/list");
         return "redirect:/curvePoint/list";
     }
 
@@ -99,10 +104,16 @@ public class CurveController {
 		CurvePoint curvePoint = curvePointRepository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Invalid curvePoint Id:" + id));
 		curvePointRepository.delete(curvePoint);
-		model.addAttribute("curvePoints", curvePointRepository.findAll());
-		log.info("GET /curvePoint/delete/{1} response : {2}",id,"redirect:/curvePoint/list");
+		model.addAttribute("curvePoints", getCurvePointList());
+		log.info("GET /curvePoint/delete/{} response : {}",id,"redirect:/curvePoint/list");
         return "redirect:/curvePoint/list";
     }
+	
+	private Collection<CurvePointDTOList> getCurvePointList() {
+		return curvePointRepository.findAll().stream()
+				.map(curvePoints -> CurvePointDTOList.DomaintoDTO(curvePoints))
+				.collect(Collectors.toList());
+	}
     
 	private Model allowRole(Model model, HttpServletRequest httpServletRequest) {
 		UserRole.typeUser userRoleType;

@@ -1,5 +1,6 @@
 package com.nnk.springboot.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -15,8 +16,8 @@ public class User {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
 	@NotBlank(message = "Username is mandatory")
+	@Column(unique = true)
 	private String username;
-	@NotBlank
 	@Pattern(regexp = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$", message = "Wrong format")
 	private String password;
 	@NotBlank(message = "FullName is mandatory")
@@ -76,7 +77,7 @@ public class User {
 
 	@Override
 	public String toString() {
-		return "User [id=" + id + ", username=" + username + ", password=" + password + ", fullname=" + fullname
+		return "User [id=" + id + ", username=" + username + ", fullname=" + fullname
 				+ ", role=" + role + "]";
 	}
 
